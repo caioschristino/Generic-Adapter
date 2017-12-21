@@ -28,6 +28,7 @@ public abstract class GenericAdapter<T> extends RecyclerView.Adapter<RecyclerVie
     public GenericAdapter(Context context) {
         this.mContext = context;
         this.mItems = new ArrayList<>();
+        this.scrollListener.mLayoutManager = null;
     }
 
     @Override
@@ -68,8 +69,10 @@ public abstract class GenericAdapter<T> extends RecyclerView.Adapter<RecyclerVie
     }
 
     public void setEndlessScroll(RecyclerView recyclerView, EndlessScrollListener.EndlessListener endlessListener) {
-        scrollListener.setEndlessListener(endlessListener);
-        recyclerView.addOnScrollListener(scrollListener);
+        if(scrollListener.mLayoutManager != null){
+            scrollListener.setEndlessListener(endlessListener);
+            recyclerView.addOnScrollListener(scrollListener);
+        }
     }
 
     private EndlessScrollListener scrollListener = new EndlessScrollListener() {
