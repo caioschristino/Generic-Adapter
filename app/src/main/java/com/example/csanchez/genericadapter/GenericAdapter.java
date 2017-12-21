@@ -7,6 +7,8 @@ import android.view.ViewGroup;
 import android.widget.Filter;
 import android.widget.Filterable;
 
+import com.example.csanchez.genericadapter.Model.SectionOrRow;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -19,15 +21,18 @@ import java.util.stream.Stream;
  * Created by csanchez on 20/12/2017.
  */
 
-public abstract class GenericAdapter<T> extends RecyclerView.Adapter<RecyclerView.ViewHolder>
+public abstract class GenericAdapter<T extends SectionOrRow> extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         implements Filterable {
+    protected static final int SECTION_TYPE = 1;
+    protected static final int ITEM_TYPE = 0;
+
     private Context mContext;
     private List<T> mItems;
     private List<T> mRecoveryData;
 
     private ValueFilter valueFilter;
 
-    public abstract RecyclerView.ViewHolder setViewHolder(ViewGroup parent);
+    public abstract RecyclerView.ViewHolder setViewHolder(ViewGroup parent, int viewType);
 
     public abstract void onBindData(RecyclerView.ViewHolder holder, final T item);
 
@@ -39,13 +44,23 @@ public abstract class GenericAdapter<T> extends RecyclerView.Adapter<RecyclerVie
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        RecyclerView.ViewHolder holder = setViewHolder(parent);
+        RecyclerView.ViewHolder holder = setViewHolder(parent, viewType);
         return holder;
     }
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         onBindData(holder, this.mItems.get(position));
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        super.getItemViewType(position);
+        if(mItems.get(position).isRow()) {
+            return ITEM_TYPE;
+        } else {
+            return SECTION_TYPE;
+        }
     }
 
     @Override
