@@ -2,20 +2,23 @@ package com.example.csanchez.genericadapter;
 
 import android.app.SearchManager;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.SearchView;
 
 import com.example.csanchez.genericadapter.Model.AnyModel;
 import com.example.csanchez.genericadapter.View.ItemViewHolder;
+
+import java.util.stream.Stream;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -24,7 +27,8 @@ import butterknife.ButterKnife;
  * Created by csanchez on 20/12/2017.
  */
 
-public class FilterListActivity extends AppCompatActivity {
+public class FilterListActivity extends AppCompatActivity
+        implements SearchView.OnQueryTextListener {
     @BindView(R.id.anymodel_recycle)
     RecyclerView mRecyclerView;
 
@@ -41,23 +45,17 @@ public class FilterListActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater menuInflater = getMenuInflater();
-        menuInflater.inflate(R.menu.search_menu, menu);
-
-        MenuItem searchItem = menu.findItem(R.id.search_view);
-
-        SearchManager searchManager = (SearchManager)
-                this.getSystemService(Context.SEARCH_SERVICE);
-
-        SearchView searchView = null;
-        if (searchItem != null) {
-            searchView = (SearchView) searchItem.getActionView();
-        }
-        if (searchView != null) {
-            searchView.setSearchableInfo(searchManager.getSearchableInfo(this.getComponentName()));
-        }
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.search_menu, menu);
+        SearchManager searchManager =
+                (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView =
+                (SearchView) menu.findItem(R.id.search_view).getActionView();
+        searchView.setSearchableInfo(
+                searchManager.getSearchableInfo(getComponentName()));
         searchView.setSubmitButtonEnabled(true);
-        return super.onCreateOptionsMenu(menu);
+        searchView.setOnQueryTextListener(this);
+        return true;
     }
 
     private GenericAdapter<AnyModel> adapter = new GenericAdapter<AnyModel>(this) {
@@ -78,4 +76,17 @@ public class FilterListActivity extends AppCompatActivity {
             }
         }
     };
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        return false;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String query) {
+        adapter.filter(anyModel -> {
+            return anyModel.getName().toLowerCase().contains(query.toLowerCase());
+        });
+        return true;
+    }
 }

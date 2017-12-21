@@ -34,7 +34,7 @@ public class InfiniteListActivity extends AppCompatActivity {
         mRecyclerView.setAdapter(adapter);
         mRecyclerView.setLayoutManager(layoutManager);
 
-        adapter.setLayoutManager(layoutManager);
+        adapter.setEndlessScrollLayoutManager(layoutManager);
         adapter.setEndlessScroll(mRecyclerView, new EndlessScrollListener.EndlessListener() {
             @Override
             public void onLoadMore(int page, int totalItemsCount) {

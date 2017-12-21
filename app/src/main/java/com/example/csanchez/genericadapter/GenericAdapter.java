@@ -8,7 +8,12 @@ import android.widget.Filter;
 import android.widget.Filterable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by csanchez on 20/12/2017.
@@ -18,7 +23,8 @@ public abstract class GenericAdapter<T> extends RecyclerView.Adapter<RecyclerVie
         implements Filterable {
     private Context mContext;
     private List<T> mItems;
-    private List<T> mStringFilterList;
+    private List<T> mRecoveryData;
+
     private ValueFilter valueFilter;
 
     public abstract RecyclerView.ViewHolder setViewHolder(ViewGroup parent);
@@ -53,6 +59,7 @@ public abstract class GenericAdapter<T> extends RecyclerView.Adapter<RecyclerVie
         } else {
             this.mItems.addAll(this.mItems.size(), items);
         }
+        this.mRecoveryData = this.mItems;
         this.notifyDataSetChanged();
     }
 
@@ -64,12 +71,12 @@ public abstract class GenericAdapter<T> extends RecyclerView.Adapter<RecyclerVie
         return this.mContext;
     }
 
-    public void setLayoutManager(LinearLayoutManager manager) {
+    public void setEndlessScrollLayoutManager(LinearLayoutManager manager) {
         scrollListener.mLayoutManager = manager;
     }
 
     public void setEndlessScroll(RecyclerView recyclerView, EndlessScrollListener.EndlessListener endlessListener) {
-        if(scrollListener.mLayoutManager != null){
+        if (scrollListener.mLayoutManager != null) {
             scrollListener.setEndlessListener(endlessListener);
             recyclerView.addOnScrollListener(scrollListener);
         }
@@ -89,33 +96,49 @@ public abstract class GenericAdapter<T> extends RecyclerView.Adapter<RecyclerVie
         if (valueFilter == null) {
             valueFilter = new ValueFilter();
         }
+
         return valueFilter;
     }
 
+    public void filter(Predicate<? super T> predicate) {
+        if (predicate != null) {
+            if (valueFilter == null) {
+                getFilter();
+            }
+
+            valueFilter.predicate = predicate;
+            valueFilter.performFiltering(null);
+        }
+    }
+
     private class ValueFilter extends Filter {
+        Predicate<? super T> predicate;
+
         @Override
         protected FilterResults performFiltering(CharSequence constraint) {
             FilterResults results = new FilterResults();
 
-            if (constraint != null && constraint.length() > 0) {
-                List filterList = new ArrayList();
-                //for (int i = 0; i < mItems.size(); i++) {
-                //if ((mItems.get(i).toUpperCase()).contains(constraint.toString().toUpperCase())) {
-                //filterList.add(mStringFilterList.get(i));
-                //}
-                // }
-                results.count = filterList.size();
-                results.values = filterList;
-            } else {
+            List<T> mStringFilterList = new ArrayList<>();
+            mRecoveryData.stream()
+                    .filter(predicate)
+                    .forEach(item -> {
+                        mStringFilterList.add(item);
+                    });
+
+            if (mStringFilterList != null && mStringFilterList.size() > 0) {
                 results.count = mStringFilterList.size();
                 results.values = mStringFilterList;
+            } else {
+                results.count = mItems.size();
+                results.values = mItems;
             }
+            publishResults(constraint, results);
             return results;
         }
 
         @Override
         protected void publishResults(CharSequence constraint, FilterResults results) {
-            mItems = (List<T>)results.values;
+            mItems = (List<T>) results.values;
             notifyDataSetChanged();
         }
     }
